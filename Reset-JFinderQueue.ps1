@@ -38,18 +38,8 @@ Param (
 Get-Service | Where {$_.Name -eq "JFinder"} | Stop-Service
 Get-Service | Where {$_.Name -eq "iMQ_Broker"} | Stop-Service
 
-$ProcessorInfo = Get-WmiObject -Class Win32_Processor
-
-If ($ProcessorInfo.DataWidth -eq "32")
-{
-	$JFinderLocation = "C:\Program Files\AutoFORM\JFinderV2\"
-	$MQLocation = "C:\Program Files\Sun\MessageQueue3\bin\ "
-}
-ElseIf ($ProcessorInfo.DataWidth -eq "64")
-{
-	$JFinderLocation = "C:\Program Files (x86)\AutoFORM\JFinderV2\"
-	$MQLocation = "C:\Program Files (x86)\Sun\MessageQueue3\bin\"
-}
+$JfinderLocation = (Get-WMIObject -Class Win32_Service | Where {$_.Name -eq "jfinder"}).PathName.TrimEnd("Jfinder.exe -zglaxservice JFinder")
+$MQLocation = (Get-WMIObject -Class Win32_Service | Where {$_.Name -eq "IMQ_Broker"}).PathName.TrimStart('"').TrimEnd('imqbrokersvc.exe"')
 
 Set-Location $JFinderLocation\WORK\PICKUP
 New-Item -Name BACKUP -ItemType Directory -Force
@@ -72,7 +62,7 @@ If ($ReImport)
 }
 
 Set-Location $MQLocation
-Invoke-Command -ScriptBlock {imqbrokerd.exe -reset messages}
+Invoke-Command -ScriptBlock {.\imqbrokerd.exe -reset messages}
 
 If ($ReImport)
 {
